@@ -1,0 +1,27 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+frontend/inventory/node_modules
+frontend/inventory/.pnp
+frontend/inventory/.pnp.js
+
+backend/node_modules
+
+backend/uploads/*
+
+# testing
+frontend/inventory/coverage
+
+# production
+frontend/inventory/build
+
+# misc
+frontend/inventory/.DS_Store
+frontend/inventory/.env.local
+frontend/inventory/.env.development.local
+frontend/inventory/.env.test.local
+frontend/inventory/.env.production.local
+
+frontend/inventory/npm-debug.log*
+frontend/inventory/yarn-debug.log*
+frontend/inventory/yarn-error.log*
