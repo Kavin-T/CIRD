@@ -21,7 +21,6 @@ export const fetchTransactions = async () => {
 // Fetch pending approvals
 export const fetchPendingApprovals = async () => {
   const token = localStorage.getItem('authToken');
-  console.log("Token    :",token);
   try {
     const response = await axios.get(`${API_ENDPOINT}/transactions/pending-approval`, {
       headers: {

@@ -19,11 +19,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cors());
 
-console.log(process.env.DATABASE_PASSWORD);
+// Create a new router instance
+const apiRouter = express.Router();
 
 // Set up MySQL connection
 const db = mysql.createConnection({
-    host: 'localhost',      // Replace with your MySQL host
+    host: process.env.DATABASE_HOST,      // Replace with your MySQL host
     user: process.env.DATABASE_USERNAME,           // Replace with your MySQL username
     password: process.env.DATABASE_PASSWORD,           // Replace with your MySQL password
     database: process.env.DATABASE_NAME, // Replace with your database name
@@ -44,7 +45,7 @@ db.connect((err) => {
 const jwtSecret = process.env.JWT_SECRET;
 
 // Login route - authenticate user and generate JWT
-app.post('/login', (req, res) => {
+app.post('/api/login', (req, res) => {
     const { email } = req.body;
 
     // Find user by email in the database
@@ -107,7 +108,7 @@ const authorizeRole = (roles) => {
 // Set up Multer for file uploads
 const upload = multer({ dest: 'uploads/' }); // 'uploads/' is the folder to store the files
 
-app.post('/transaction', authenticateJWT, upload.single('pdfFile'), (req, res) => {
+app.post('/api/transaction', authenticateJWT, upload.single('pdfFile'), (req, res) => {
   const { EquipmentID, PersonName, CompanyName, PhoneNumber, ExpectedReturnDays } = req.body;
   const Status = 'REQUESTED';
 
@@ -176,7 +177,7 @@ app.post('/transaction', authenticateJWT, upload.single('pdfFile'), (req, res) =
 });
 
 // API to download the request form associated with a provided TransactionID
-app.get('/request-form/:id', (req, res) => {
+app.get('/api/request-form/:id', (req, res) => {
   const transactionId = parseInt(req.params.id, 10);
 
   if (isNaN(transactionId)) {
@@ -223,7 +224,7 @@ app.get('/request-form/:id', (req, res) => {
 });
 
 // API endpoint to retrieve all transaction data
-app.get('/transactions', (req, res) => {
+app.get('/api/transactions', (req, res) => {
     const query = 'SELECT * FROM Transactions';
 
     db.query(query, (err, results) => {
@@ -237,7 +238,7 @@ app.get('/transactions', (req, res) => {
 });
 
 // API to fetch all transactions whose status is not "ISSUED" or "RETURNED"
-app.get('/transactions/live', (req, res) => {
+app.get('/api/transactions/live', (req, res) => {
   const query = `
     SELECT * 
     FROM Transactions 
@@ -255,7 +256,7 @@ app.get('/transactions/live', (req, res) => {
 });
 
 // API to retrieve pending transactions based on user role
-app.get('/transactions/pending-approval', authenticateJWT, (req, res) => {
+app.get('/api/transactions/pending-approval', authenticateJWT, (req, res) => {
   
   // Define the status associated with each role
   const roleStatusMap = {
@@ -290,7 +291,7 @@ app.get('/transactions/pending-approval', authenticateJWT, (req, res) => {
 });
 
 // API to approve transaction 
-app.put('/transaction/approve/:id', authenticateJWT, (req, res) => {
+app.put('/api/transaction/approve/:id', authenticateJWT, (req, res) => {
 
   // Define status transitions for each role
   const statusTransitions = {
@@ -361,7 +362,7 @@ app.put('/transaction/approve/:id', authenticateJWT, (req, res) => {
   });
 });
 
-app.put('/transaction/reject/:id', (req, res) => {
+app.put('/api/transaction/reject/:id', (req, res) => {
   const { id } = req.params;
 
   if (!id) {
@@ -428,7 +429,7 @@ app.put('/transaction/reject/:id', (req, res) => {
 });
 
 //API endpoint to retrieve the entire Equipment table
-app.get('/equipments', (req, res) => {
+app.get('/api/equipments', (req, res) => {
   const query = 'SELECT * FROM Equipment';
 
   db.query(query, (err, results) => {
@@ -443,7 +444,7 @@ app.get('/equipments', (req, res) => {
 });
 
 // API endpoint to retrieve Equipment with Status 'AVAILABLE'
-app.get('/equipments/available', (req, res) => {
+app.get('/api/equipments/available', (req, res) => {
   const query = 'SELECT * FROM Equipment WHERE Status = ?';
   const status = 'AVAILABLE';
 
@@ -459,7 +460,7 @@ app.get('/equipments/available', (req, res) => {
 
 
 // API endpoint to add new equipment
-app.post('/equipment', (req, res) => {
+app.post('/api/equipment', (req, res) => {
   const { EquipmentName, Make, Model, SerialNumber } = req.body;
 
   const Status='AVAILABLE';
@@ -487,7 +488,7 @@ app.post('/equipment', (req, res) => {
 });
 
 // Delete equipment endpoint
-app.delete('/equipment/:equipment_id', (req, res) => {
+app.delete('/api/equipment/:equipment_id', (req, res) => {
     const equipmentId = req.params.equipment_id;
   
     // SQL query to delete equipment by equipment_id
@@ -508,7 +509,7 @@ app.delete('/equipment/:equipment_id', (req, res) => {
   });
 
 //API endpoint to retrieve users
-app.get('/users', (req, res) => {
+app.get('/api/users', (req, res) => {
     const query = 'SELECT Email, AccessRole, FullName FROM Users';
 
     db.query(query, (err, results) => {
@@ -523,7 +524,7 @@ app.get('/users', (req, res) => {
 });
 
 // API endpoint to add a new user
-app.post('/user', (req, res) => {
+app.post('/api/user', (req, res) => {
     const { Email, role, name } = req.body;
   
     // Validate required fields
@@ -548,7 +549,7 @@ app.post('/user', (req, res) => {
 });
 
 // Delete user endpoint
-app.delete('/user/:email', (req, res) => {
+app.delete('/api/user/:email', (req, res) => {
   const email = req.params.email;
 
   // SQL query to delete user by email
@@ -569,7 +570,7 @@ app.delete('/user/:email', (req, res) => {
 });
 
 // Start the server
-const PORT = 4000;
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     console.log('Server Date:', new Date());
